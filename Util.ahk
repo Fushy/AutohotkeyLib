@@ -62,60 +62,6 @@ util_waitImage(x1, y1, x2, y2, image)
 	return [x, y]
 }
 
-/*
-imagesearch_de_droite_a_gauche(x1, y1, x2, y2, image, largeur, hauteur)
-{
-	j := y1
-	i := x2
-	xx1 := x2 - largeur
-	xx2 := x2
-	yy1 := y1
-	yy2 := y1 + hauteur
-	
-	; while (j <= y2) {
-		; i := x2
-		; xx1 := x2 - largeur
-		; xx2 := x2
-		; while (i >= x1) {
-			; ImageSearch, image_X, image_Y, xx1, yy1, xx2, yy2, % image
-			; mousemove, xx1, yy1
-			; mousemove, xx2, yy2
-			; if (image_X || image_Y) {
-				; return [image_X, image_Y]
-			; }
-			; xx1 -= largeur
-			; xx2 -= largeur
-			; i -= largeur
-		; }
-		; j += hauteur
-		; yy1 += hauteur
-		; yy2 += hauteur
-	; }
-
-	while (i >= x1) {
-		j := y1
-		yy1 := y1
-		yy2 := y1 + hauteur
-		while (j <= y2) {
-			ImageSearch, image_X, image_Y, xx1, yy1, xx2, yy2, % image
-			; mousemove, xx1, yy1
-			; mousemove, xx2, yy2
-			; msgbox % j " " . y2
-			if (image_X || image_Y) {
-				return [image_X, image_Y]
-			}
-			j += hauteur
-			yy1 += hauteur
-			yy2 += hauteur
-		}
-		i -= largeur
-		xx1 -= largeur
-		xx2 -= largeur
-	}
-}
-*/
-;;;
-
 ;;; Math
 util_max(a, b) {
 	return (a > b) ? a : b
@@ -150,21 +96,6 @@ util_StrReverse(str)
 	return value
 }
 ;;;
-
-util_MouseClick(X, Y, window:="", c:="left", count:="1", speed:=0, offset_x:=0, offset_y:=0)
-{
-	MouseGetPos, save_X, save_Y
-	if (window = ""){
-		MouseClick, %left%, X+offset_x, Y+offset_y, count, speed
-	}
-	else {
-		WinGetPos, fenetre_X, fenetre_Y, Width, Height, % WinTitle
-		X -= fenetre_X
-		Y -= fenetre_Y
-		MouseClick, %left%, X+offset_x, Y+offset_y, count, speed
-	}
-	mousemove, save_X, save_Y, 0
-}
 
 util_CopyClipboard(str:="")
 {
@@ -569,6 +500,26 @@ StringSort(a1, a2)
     return a1 > a2 ? 1 : a1 < a2 ? -1 : 0  ; Sorts alphabetically based on the setting of StringCaseSense.
 }
 
+util_MouseClick(X, Y, title:="", btn:="LButton", count:="1", speed:=0, offset_x:=0, offset_y:=0, sleep_time:=0)
+{	; absolute coord or relatif if title
+	util_release_key()
+	blockinput, on
+	MouseGetPos, save_X, save_Y
+	if (title) {
+		WinGetPos, fenetre_X, fenetre_Y, Width, Height, % title
+		X += fenetre_X
+		Y += fenetre_Y
+	}
+	mousemove, X+offset_x, Y+offset_y, 0
+	loop % count {
+		send, {%btn% Down}
+		sleep, % sleep_time
+		send, {%btn% Up}
+	}
+	; MouseClick, %left%, X+offset_x, Y+offset_y, count, speed
+	mousemove, save_X, save_Y, 0
+	blockinput, off
+}
 
 util_sendMagic(msg, WinTitle="", X="", Y="", param:=0, WinText="", ExcludeTitle="", ExcludeText="")  
 { ; https://wiki.winehq.org/List_Of_Windows_Messages
@@ -589,7 +540,7 @@ util_sendMagic(msg, WinTitle="", X="", Y="", param:=0, WinText="", ExcludeTitle=
 
 util_click_absolute_magic(X, Y, WinTitle="", sleep_time:=0, WinText="", ExcludeTitle="", ExcludeText="")  
 {
-	; mousemove, X, Y
+	mousemove, X, Y
 	; pause
 	; blockinput, On
 	; if (WinTitle != "") {
@@ -605,6 +556,22 @@ util_click_absolute_magic(X, Y, WinTitle="", sleep_time:=0, WinText="", ExcludeT
 	PostMessage, 0x202, 0, cX&0xFFFF | cY<<16,, ahk_id %hwnd% ; WM_LBUTTONUP  
 	; pause
 	; blockinput, Off
+}
+
+util_click_absolute_magic_2(X, Y, WinTitle="", sleep_time:=0, WinText="", ExcludeTitle="", ExcludeText="")  
+{
+	; mousemove, X, Y
+	; pause
+	; msgbox % X
+	; msgbox % Y
+	; SetControlDelay -1  ; May improve reliability and reduce side effects.
+	; ControlClick, Toolbar321, Some Window Title,,,, NA x1297 y2744
+	ControlFocus,, %WinTitle%
+	WinGetPos, fenetre_X, fenetre_Y, Width, Height, % WinTitle
+	X -= fenetre_X
+	Y -= fenetre_Y
+	ControlClick, "x" . X . " y" . Y
+	ControlClick, x1297 y2744
 }
 
 util_click_rng_absolute_magic(X1, Y1, X2, Y2, WinTitle="", sleep_time:=0, WinText="", ExcludeTitle="", ExcludeText="")  
