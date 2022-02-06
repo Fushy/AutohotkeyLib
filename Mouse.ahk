@@ -1,0 +1,2 @@
+
+	SetMouseDelay, 1
