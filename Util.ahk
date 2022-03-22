@@ -9,6 +9,22 @@ SetBatchLines, -1
 ; F3::ControlSend , %Control%, {enter}, ahk_id %win_id%
 
 
+util_restric(ByRef x, ByRef y, x1, y1, x2, y2)
+{
+	if (x < x1) {
+		x := x1
+	}
+	if (x > x2) {
+		x := x2
+	}
+	if (y < y1) {
+		y := y1
+	}
+	if (y > y2) {
+		y := y2
+	}
+}
+
 ;;; ImageSearch
 util_DetectImage(x1, y1, x2, y2, image, p:=50)
 {
@@ -245,54 +261,60 @@ util_wait_release_key()
 	}
 }
 
-util_release_key()
+util_release_key(LButton:=0, a:=0)
 {
-	if (GetKeyState("Alt", "P") || GetKeyState("Alt", "T")) {
+	if (GetKeyState("Alt")) {
 		send, {Alt Up}
 	}
-	if (GetKeyState("Ctrl", "P") || GetKeyState("Ctrl", "T")) {
+	if (GetKeyState("Ctrl")) {
 		send, {Ctrl Up}
 	}
-	if (GetKeyState("Shift", "P") || GetKeyState("Shift", "T")) {
+	if (GetKeyState("Shift")) {
 		send, {Shift Up}
 	}
-	if (GetKeyState("LWin", "P") || GetKeyState("Win", "T")) {
+	if (GetKeyState("LWin")) {
 		send, {LWin Up}
 	}
-	if (GetKeyState("RWin", "P") || GetKeyState("Win", "T")) {
+	if (GetKeyState("RWin")) {
 		send, {RWin Up}
 	}
-	if (GetKeyState("LButton", "P") || GetKeyState("LButton", "T")) {
+	if (!LButton && GetKeyState("LButton")) {
 		send, {LButton Up}
 	}
-	if (GetKeyState("RButton", "P" || GetKeyState("RButton", "T"))) {
+	if (GetKeyState("RButton")) {
 		send, {RButton Up}
 	}
-	if (GetKeyState("a", "P") || GetKeyState("a", "T")) {
+	if (!a && GetKeyState("a")) {
 		send, {a Up}
 	}
-	if (GetKeyState("z", "P") || GetKeyState("z", "T")) {
+	if (GetKeyState("z")) {
 		send, {z Up}
 	}         
-	if (GetKeyState("e", "P") || GetKeyState("e", "T")) {
+	if (GetKeyState("e")) {
+		send, {e Up}
+	}     
+	if (GetKeyState("r")) {
 		send, {e Up}
 	}
-	if (GetKeyState("q", "P") || GetKeyState("q", "T")) {
+	if (GetKeyState("q")) {
 		send, {q Up}
 	}
-	if (GetKeyState("s", "P") || GetKeyState("s", "T")) {
+	if (GetKeyState("s")) {
 		send, {s Up}
 	}
-	if (GetKeyState("d", "P") || GetKeyState("d", "T")) {
+	if (GetKeyState("d")) {
 		send, {d Up}
 	}
-	if (GetKeyState("w", "P") || GetKeyState("w", "T")) {
+	if (GetKeyState("f")) {
+		send, {d Up}
+	}
+	if (GetKeyState("w")) {
 		send, {w Up}
 	}
-	if (GetKeyState("x", "P") || GetKeyState("x", "T")) {
+	if (GetKeyState("x")) {
 		send, {x Up}
 	}
-	if (GetKeyState("c", "P") || GetKeyState("c", "T")) {
+	if (GetKeyState("c")) {
 		send, {c Up}
 	}
 	if (GetKeyState("AppsKey", "P") || GetKeyState("AppsKey", "T")) {

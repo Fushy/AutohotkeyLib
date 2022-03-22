@@ -157,6 +157,7 @@ texte_put_var(nom_variable, valeur, fichier, dict_ligne_var:="")
 	ok := false
 	Loop, read, %fichier%
 	{
+		; pause
 		save := A_index
 		if (dict_ligne_var) {
 			if (A_index > ligne) {

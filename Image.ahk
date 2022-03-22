@@ -54,10 +54,10 @@ image_rectangle(x1, y1, x2, y2, id:=1, title:="A", rouge:="ff", vert:="00", bleu
 	screensHeight := image_config["screensHeight"]
 	
 	color = 0x%transparence%%rouge%%vert%%bleu%
-	x1 -= screens_X_min
-	x2 -= screens_X_min
-	y1 -= screens_Y_min
-	y2 -= screens_Y_min
+	; x1 -= screens_X_min
+	; x2 -= screens_X_min
+	; y1 -= screens_Y_min
+	; y2 -= screens_Y_min
 	for id, pen in draw_pattern {
 		if (x1 == pen[2] && y1 == pen[3] && (x2-x1) == pen[4] && (y2-y1) == pen[5] && X == pen[6] && Y == pen[7]) {
 			return
@@ -109,13 +109,15 @@ image_rectangle(x1, y1, x2, y2, id:=1, title:="A", rouge:="ff", vert:="00", bleu
 	; msgbox % "(" . x1 . ", " . y1 . ") (" . x2 - x1 . ", " . y2 - y1 . ")"
 	Gdip_DrawRectangle(G, pPen, x1, y1, x2 - x1, y2 - y1) ; x, y, width, hight
 	; Gdip_FillRectangle(G, pPen, x1, y1, x2 - x1, y2 - y1)
-	UpdateLayeredWindow(hwn, hdc, screens_X_min, screens_Y_min, screensWidth, screensHeight)	; l'air sur la quelle les dessins seront dessiné
+	UpdateLayeredWindow(hwn, hdc, 0, 0, 1920, 1080)	; l'air sur la quelle les dessins seront dessiné
+	; UpdateLayeredWindow(hwn, hdc, 0, 0, screensWidth, screensHeight)	; l'air sur la quelle les dessins seront dessiné
 	if (id == 0) {
 		draw_pattern[0].Push([pPen, x1, y1, x2 - x1, y2 - y1, X, Y])
 	}
 	else {
 		draw_pattern[id] := [pPen, x1, y1, x2 - x1, y2 - y1, X, Y]
 	}
+	; pause
 }
 
 image_delete(id:="")
