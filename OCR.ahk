@@ -17,10 +17,7 @@ chiffres := "0123456789"
 
 take_screenshot(x1, y1, x2, y2, filename:="out.png")
 {
-	; A_ScriptDir
-	fichier := "ocr_out.png"
 	options = -c %x1%,%y1%,%x2%,%y2% %filename%
-	; msgbox % options
 	ahk_folder := substr(A_AhkPath, 1, StrLen(A_AhkPath) - StrLen("AutoHotkey.exe"))
 	RunWait, %ahk_folder%\boxcutter-1.5\boxcutter.exe %options%
 }
