@@ -1,4 +1,5 @@
 #Include <Image>
+#Include <Texte>
 
 SetBatchLines, -1
 ; cree_rectangle(100, 100, 200, 200)
@@ -18,6 +19,40 @@ SetBatchLines, -1
 	; return
 ; }
 
+gen_list_around_value(value, length)
+{
+    start := value - (length // 2) * (value / length)
+    if (mod(length, 2) == 0) {
+        start += (value / length) / 2
+	}
+	array := object()
+	loop % length {
+		array.Push(start + (A_index - 1) * (value / length))
+	}
+	return array
+}
+
+ Clipboard_HasText() {
+	Static CF_NATIVETEXT := A_IsUnicode ? 13 : 1 ; CF_UNICODETEXT = 13, CF_TEXT = 1
+	Return DllCall("IsClipboardFormatAvailable", "UInt", CF_NATIVETEXT, "UInt")
+ }
+ 
+ get_clipboard() {
+	Static CF_NATIVETEXT := A_IsUnicode ? 13 : 1 ; CF_UNICODETEXT = 13, CF_TEXT = 1
+	ClipText := ""
+	If DllCall("OpenClipboard", "Ptr", 0, "UInt") {
+	   If (HMEM := DllCall("GetClipboardData", "UInt", CF_NATIVETEXT, "UPtr")) {
+		  Chrs := DllCall("GlobalSize", "Ptr", HMEM, "Ptr") >> !!A_IsUnicode
+		  If (PMEM := DllCall("GlobalLock", "Ptr", HMEM, "UPtr")) {
+			 ClipText := StrGet(PMEM, Chrs)
+			 DllCall("GlobalUnlock", "Ptr", HMEM)
+		  }
+	   }
+	   DllCall("CloseClipboard")
+	}
+	if Clipboard_HasText()
+		Return ClipText
+ }
 
 util_restric(ByRef x, ByRef y, x1, y1, x2, y2)
 {
@@ -71,7 +106,7 @@ util_ImageSearch(x1, y1, x2, y2, image, title:="A", rouge:="ff", vert:="00", ble
 {
 	image_rectangle(x1-1, y1-1, x2+1, y2+1, 1, title, "00", "00", "ff")
 	ImageSearch, x, y, x1, y1, x2, y2, %image%
-	size := image_size(SubStr(image, util_InStrLast(image)+1))
+	; size := image_size(SubStr(image, InStrLast(image)+1))
 	if (x && y) {
 		; mousemove, x, y
 		image_rectangle(x-1, y-1, x+size[1]+1, y+size[2]+1, 1, title, rouge, vert, bleu)
@@ -98,30 +133,21 @@ util_min(a, b) {
 	return (a < b) ? a : b
 }
 
-rng(min, max) {
+
+rng_int(min, max) {
 	Random, value, min, max
+	return value
+}
+
+rng() {
+	Random, value, 0.0, 1.0
 	return value
 }
 ;;;
 
-;;; String
-util_InStrLast(str)
-{
-	index := 0
-	while ((i := InStr(str, " ",, i+1)) != 0) {
-		index := i
-	}
-	return index
-}
+;;; String - or check text.ahk
 
-util_StrReverse(str)
-{
-	Loop, Parse, str
-	{
-		value := A_LoopField . value
-	}
-	return value
-}
+
 ;;;
 
 util_CopyClipboard(str:="")
@@ -174,6 +200,14 @@ util_chronometre(msg:="")
 	}
 }
 
+util_index(array, elementToFind) {
+    for index, value in array {
+        if (value == elementToFind) {
+            return index
+        }
+    }
+    return -1
+}
 
 util_contains(haystack, needle) {
 	if !(IsObject(haystack)) || (haystack.Length() = 0)
@@ -218,14 +252,14 @@ util_array2D(array, separateur:="`n")
 
 util_spam_keys(keys, n, timer)
 {
-	loop % n {
+	; loop % n {
 		for i, key in keys
 		{
-			send, % key
+			send, {%key%}
 			sleep, 10
 		}
 		sleep, % timer
-	}
+	; }
 }
 
 _wait_release_key(key)
@@ -520,14 +554,15 @@ util_MouseClick(X, Y, title:="", btn:="LButton", count:="1", speed:=0, offset_x:
 
 util_sendMagic(msg, WinTitle="", X="", Y="", param:=0, WinText="", ExcludeTitle="", ExcludeText="")  
 { ; https://wiki.winehq.org/List_Of_Windows_Messages
-	if (X) {
+	; if (X) {
 		ControlFocus, control, %WinTitle%
-		WinGetPos, fenetre_X, fenetre_Y, Width, Height, % WinTitle
-		X -= fenetre_X
-		Y -= fenetre_Y
-	}
+	; 	WinGetPos, fenetre_X, fenetre_Y, Width, Height, % WinTitle
+	; 	X -= fenetre_X
+	; 	Y -= fenetre_Y
+	; }
+	ControlSend,, msg, %WinTitle%
 	hwnd:=ControlFromPoint(X, Y, WinTitle, WinText, cX, cY, ExcludeTitle, ExcludeText)  
-	; PostMessage, %msg%, param, cX&0xFFFF | cY<<16, %control%, ahk_id %hwnd%
+	PostMessage, %msg%, param, cX&0xFFFF | cY<<16, %control%, ahk_id %hwnd%
 	; SendMessage, 0x115, 120 << 16, ( X << 16 )|Y,, ahk_id %hwnd%
 	; PostMessage, 0x115, 120 << 16, ( X << 16 )|Y,, ahk_id %hwnd%
 	; PostMessage, 0x20A, 0x780000, (X<<16)|Y,, ahk_id %hwnd%
@@ -535,46 +570,52 @@ util_sendMagic(msg, WinTitle="", X="", Y="", param:=0, WinText="", ExcludeTitle=
 	; PostMessage, 0x20A, -120 << 16, (mY << 16) | (mX & 0xFFFF), %TCon%, ahk_id%TWinID%
 }
 
-util_click_absolute_magic(X, Y, WinTitle="", sleep_time:=0, WinText="", ExcludeTitle="", ExcludeText="")  
+util_click_absolute_magic(X, Y, WinTitle="", sleep_time:=0, WinText="", ExcludeTitle="", ExcludeText="", n=1)  
 {
-	mousemove, X, Y
+	SetControlDelay -1
+	; mousemove, X, Y
 	; pause
 	; blockinput, On
 	; if (WinTitle != "") {
 		ControlFocus,, %WinTitle%
 		WinGetPos, fenetre_X, fenetre_Y, Width, Height, % WinTitle
+		; screenmode
 		X -= fenetre_X
 		Y -= fenetre_Y
 	; }
-	hwnd:=ControlFromPoint(X, Y, WinTitle, WinText, cX, cY, ExcludeTitle, ExcludeText)  
-	PostMessage, 0x200, 0, cX&0xFFFF | cY<<16,, ahk_id %hwnd% ; WM_MOUSEMOVE
-	PostMessage, 0x201, 0, cX&0xFFFF | cY<<16,, ahk_id %hwnd% ; WM_LBUTTONDOWN  
-	; sleep, % sleep_time
-	PostMessage, 0x202, 0, cX&0xFFFF | cY<<16,, ahk_id %hwnd% ; WM_LBUTTONUP  
-	; pause
-	; blockinput, Off
+	loop %n% {
+		hwnd:=ControlFromPoint(X, Y, WinTitle, WinText, cX, cY, ExcludeTitle, ExcludeText)  
+		; PostMessage, 0x200, 0, cX&0xFFFF | cY<<16,, ahk_id %hwnd% ; WM_MOUSEMOVE
+		PostMessage, 0x201, 0, cX&0xFFFF | cY<<16,, ahk_id %hwnd% ; WM_LBUTTONDOWN
+		PostMessage, 0x202, 0, cX&0xFFFF | cY<<16,, ahk_id %hwnd% ; WM_LBUTTONUP
+		PostMessage, 0x201, 0, cX&0xFFFF | cY<<16,, WinTitle ; WM_LBUTTONDOWN
+		sleep, 75
+		PostMessage, 0x202, 0, cX&0xFFFF | cY<<16,, WinTitle ; WM_LBUTTONUP
+		; PostMessage, 0x201, 0, cX&0xFFFF | cY<<16,, %WinTitle% ; WM_LBUTTONDOWN
+		; PostMessage, 0x202, 0, cX&0xFFFF | cY<<16,, %WinTitle% ; WM_LBUTTONUP
+		; blockinput, Off	
+		sleep, %sleep_time%
+	}
 }
 
 util_click_absolute_magic_2(X, Y, WinTitle="", sleep_time:=0, WinText="", ExcludeTitle="", ExcludeText="")  
 {
 	; mousemove, X, Y
 	; pause
-	; msgbox % X
-	; msgbox % Y
-	; SetControlDelay -1  ; May improve reliability and reduce side effects.
+	SetControlDelay -1  ; May improve reliability and reduce side effects.
 	; ControlClick, Toolbar321, Some Window Title,,,, NA x1297 y2744
 	ControlFocus,, %WinTitle%
 	WinGetPos, fenetre_X, fenetre_Y, Width, Height, % WinTitle
-	X -= fenetre_X
-	Y -= fenetre_Y
+	; X -= fenetre_X
+	; Y -= fenetre_Y
 	ControlClick, "x" . X . " y" . Y
-	ControlClick, x1297 y2744
+	ControlClick, x500 y500
 }
 
 util_click_rng_absolute_magic(X1, Y1, X2, Y2, WinTitle="", sleep_time:=0, WinText="", ExcludeTitle="", ExcludeText="")  
 {
-	x := rng(X1, X2)
-	y := rng(Y1, Y2)
+	x := rng_int(X1, X2)
+	y := rng_int(Y1, Y2)
 	util_click_absolute_magic(x, y, WinTitle, sleep_time, WinText, ExcludeTitle, ExcludeText)
 }
 
@@ -647,4 +688,12 @@ EnumChildFindPoint(aWnd, lParam)
         }
     }
     return true
+}
+
+mousemove_builtinswin(x, y, length)
+{
+	loop % length {
+		DllCall("mouse_event", uint, 1, int, x, int, y, uint, 0, int, 0)
+		Sleep 10
+	}
 }

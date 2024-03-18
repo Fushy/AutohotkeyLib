@@ -97,34 +97,27 @@ OCR_capture_screen(x1, y1, x2, y2, title, nameOutputFile)
 
 OCR_image_C2T(image, whitelist, factor, trimcapture:=true, deskew:=true, exePath:="")
 {
-	if (!exePath) {
-		exePath := "D:\_Fichier-PC\Documents\AutoHotKey Scripts\Util\Capture2Text\Capture2Text.exe"
-	}
+	if (!exePath)
+		exePath := "A:\Programmes\Capture2Text\Capture2Text.exe"
 	if (!FileExist(image)) {
 		; msgbox L'image à analyser n'existe pas`n|%image%|
 		return
 	}
-	if (trimcapture) {
+	if (trimcapture)
 		trimcapture := "--trim-capture"
-	}
-	else {
+	else
 		trimcapture :=
-	}
-	if (deskew) {
+	if (deskew)
 		deskew := "--deskew"
-	}
-	else {
+	else
 		deskew :=
-	}
-	if (factor) {
+	if (factor)
 		factor := "--scale-factor " . factor
-	}
-	else {
+	else
 		factor :=
-	}
 	options = -i %image% --whitelist %whitelist% %trimcapture% %deskew% %factor% -o tmp.txt
 	RunWait, %exePath% %options%
-	ocr := prend_le_fichier("tmp.txt")
+	ocr := read_file("tmp.txt")
 	FileDelete, tmp.txt
 	return SubStr(ocr, 1, StrLen(ocr) - 1)
 }
@@ -204,7 +197,7 @@ OCR_selection_C2T(whitelist, factor:=3.5, trimcapture:=true, deskew:=true)
 	options = -s "%x1% %y1% %x2% %y2%" --whitelist %whitelist% %trimcapture% %deskew% %factor% -o tmp.txt
 	; msgbox % options
 	RunWait, D:\_Fichier-PC\Documents\AutoHotKey Scripts\Util\Capture2Text\Capture2Text.exe %options%
-	ocr := prend_le_fichier("tmp.txt")
+	; ocr := prend_le_fichier("tmp.txt")
 	FileDelete, tmp.txt
 	return ocr
 }

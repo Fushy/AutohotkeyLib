@@ -24,10 +24,10 @@ supprime_double_line_var(var)
 	return output
 }
 
-prend_le_fichier(fichier, ignoreBlank:=false)
+read_file(file, ignoreBlank:=false)
 {
 	string :=
-	Loop, read, % fichier
+	Loop, read, % file
 	{
 		if (ignoreBlank && (A_LoopReadLine = "" || A_LoopReadLine = "`n")) {
 			continue
@@ -41,6 +41,15 @@ prend_le_fichier(fichier, ignoreBlank:=false)
 	return string
 }
 
+get_first_line(file)
+{
+	string :=
+	Loop, read, % file
+	{
+		return A_LoopReadLine
+	}
+}
+
 restreint_caractere(texte, whitelist)
 {
 	string :=
@@ -51,6 +60,15 @@ restreint_caractere(texte, whitelist)
 		}
 	}
 	return string
+}
+
+StrReverse(str)
+{
+	Loop, Parse, str
+	{
+		value := A_LoopField . value
+	}
+	return value
 }
 
 ; debut_texte=0 On commence Ã  partir de la fin

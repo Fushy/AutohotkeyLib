@@ -32,6 +32,19 @@ screensHeight := abs(screens_Y_min) + abs(screens_Y_max)
 
 image_config := {"screens_X_min": screens_X_min, "screens_X_max": screens_X_max, "screens_Y_min": screens_Y_min, "screens_Y_max": screens_Y_max, "screensWidth": screensWidth, "screensHeight": screensHeight, "screen0_X": screen0_X, "screen0_Y": screen0_Y, "screen1_X": screen1_X, "screen1_Y": screen1_Y, "screen2_X": screen2_X, "screen2_Y": screen2_Y}
 
+image_search_opencv(x0, y0, x1, y1, paramfile, trigger, search_image, response_file)
+{
+	; absolute coord
+	; msgbox %search_image%
+	text := x0 . " " . y0 . " " . x1 . " " . y1 . " " . trigger . " " . search_image . " " . response_file
+	fileappend, %text%, %paramfile%
+	while fileexist(paramfile)
+		sleep, 10
+	response := read_file(response_file)
+	FileDelete, %response_file%
+	return response
+}
+
 image_rectangle(x1, y1, x2, y2, title, id:=1, rouge:="ff", vert:="00", bleu:="00", transparence:="ff", thickness:=1, fill:=false) ; ARGB, thickness ; id:=0 ne supprime pas les anciens id qui vallent 0.
 {
 	; x y en absolute

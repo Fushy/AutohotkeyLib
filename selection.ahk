@@ -55,7 +55,7 @@ selection_click()
 }
 
 ; creates a click-and-drag selection box to specify an area
-selection_getCoords() {
+selection() {
 	;Mask Screen
 	Gui, Color, FFFFFF
 	Gui +LastFound
@@ -70,7 +70,7 @@ selection_getCoords() {
 	WinGet, hw_frame_m,ID,"AutoHotkeySnapshotApp"
 	hdc_frame_m := DllCall( "GetDC", "uint", hw_frame_m)
 	KeyWait, LButton, D 
-	MouseGetPos, scan_x_start, scan_y_start 
+	MouseGetPos, scan_x_start, scan_y_start
 	Loop
 	{
 		Sleep, 10   
@@ -83,29 +83,85 @@ selection_getCoords() {
 		} else {
 			break
 		}
+		; tooltip scan_x% %scan_y%
 	}
 
 	;KeyWait, LButton, U
 	MouseGetPos, scan_x_end, scan_y_end
 	Gui Destroy
-	
-	if (scan_x_start < scan_x_end)
-	{
-		x_start := scan_x_start
-		x_end := scan_x_end
-	} else {
-		x_start := scan_x_end
-		x_end := scan_x_start
-	}
-	
-	if (scan_y_start < scan_y_end)
-	{
-		y_start := scan_y_start
-		y_end := scan_y_end
-	} else {
-		y_start := scan_y_end
-		y_end := scan_y_start
-	}
-   return [x_start, x_end, y_start, y_end]
+   return normalise(x_start, y_start, x_end, y_end)
 }
 
+
+multiple_selection() {
+	Gui, Color, FFFFFF
+	Gui +LastFound
+	WinSet, Transparent, 100
+	Gui, -Caption 
+	Gui, +AlwaysOnTop
+	Gui, Show, x0 y0 h%A_ScreenHeight% w%A_ScreenWidth%,"AutoHotkeySnapshotApp"  
+	
+	CoordMode, Mouse, Screen
+	CoordMode, Tooltip, Screen
+	WinGet, hw_frame_m,ID,"AutoHotkeySnapshotApp"
+	hdc_frame_m := DllCall( "GetDC", "uint", hw_frame_m)
+	KeyWait, LButton, D 
+	rectangles := Object()
+	while (!GetKeyState("RButton")) {
+		scan_x :=
+		scan_x_start :=
+		while (!GetKeyState("RButton")) {
+			Sleep, 10   
+			if (GetKeyState("LButton")) {
+				if (!scan_x_start) {
+					MouseGetPos, scan_x_start, scan_y_start
+				}
+				MouseGetPos, scan_x, scan_y
+				DllCall("gdi32.dll\Rectangle", "uint", hdc_frame_m, "int", 0, "int", 0, "int", A_ScreenWidth, "int", A_ScreenWidth)
+				DllCall("gdi32.dll\Rectangle", "uint", hdc_frame_m, "int", scan_x_start, "int", scan_y_start, "int", scan_x, "int", scan_y)
+			}
+			else if (scan_x) {
+				MouseGetPos, scan_x_end, scan_y_end
+				rectangles.Push(normalise(scan_x_start, scan_y_start, scan_x_end, scan_y_end))
+				break
+			}
+			; tooltip scan_x% %scan_y%
+		}
+	}
+	Gui Destroy
+    return rectangles
+}
+
+normalise(x0, y0, x1, y1)
+{
+	if (x0 < x1)
+	{
+		x_start := x0
+		x_end := x1
+	} else {
+		x_start := x1
+		x_end := x0
+	}
+	
+	if (y0 < y1)
+	{
+		y_start := y0
+		y_end := y1
+	} else {
+		y_start := y1
+		y_end := y0
+	}
+	; msgb_start% . " " . %x_end% . " " . %y_start% . " " . %y_end%
+   return [x_start, y_start, x_end, y_end]
+}
+
+is_inside_rectangle(point, rectangle)
+{
+	point_x := point[1]
+	point_y := point[2]
+	rectangle_x0 := rectangle[1]
+	rectangle_y0 := rectangle[2]
+	rectangle_x1 := rectangle[3]
+	rectangle_y1 := rectangle[4]
+	return rectangle_x0 <= point_x && point_x <= rectangle_x1 && rectangle_y0 <= point_y && point_y <= rectangle_y1
+}
